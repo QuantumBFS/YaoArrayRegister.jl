@@ -192,6 +192,9 @@ for (G, FACTOR) in zip([:Z, :S, :T, :Sdag, :Tdag], [:(-1), :(im), :($(exp(im*π/
     @eval YaoBase.instruct!(state::AbstractVecOrMat, g::Val{$(QuoteNode(G))}, locs::Tuple{Int}) =
         instruct!(state, g, locs...)
 
+    # no effect (to fix ambiguity)
+    @eval YaoBase.instruct!(::AbstractVecOrMat, ::Val{$(QuoteNode(G))}, ::Tuple{}) = nothing
+
     @eval function YaoBase.instruct!(state::AbstractVecOrMat{T}, ::Val{$(QuoteNode(G))}, locs::Int) where T
         mask = bmask(locs)
         step = 1<<(locs-1)
