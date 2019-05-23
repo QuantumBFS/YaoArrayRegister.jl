@@ -23,13 +23,13 @@ macro threads(ex)
     if Threads.nthreads() == 1 # do nothing in single threading mode
         return esc(ex)
     else
-        return quote
-            if log2dim1($(esc(state))) < THREAD_THRESHOLD
-                $(esc(ex))
+        return esc(quote
+            if log2dim1(state) < THREAD_THRESHOLD
+                $ex
             else
-                Threads.@threads $(ex)
+                Threads.@threads $ex
             end
-        end
+        end)
     end
 end
 
