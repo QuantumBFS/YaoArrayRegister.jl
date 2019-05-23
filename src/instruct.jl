@@ -24,7 +24,7 @@ macro threads(ex)
         return esc(ex)
     else
         return quote
-            if log2dim1(state) < THREAD_THRESHOLD
+            if log2dim1($(esc(state))) < THREAD_THRESHOLD
                 $(esc(ex))
             else
                 Threads.@threads $(ex)
