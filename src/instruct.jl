@@ -2,6 +2,9 @@
 # in principal we only allow one to input a tuple of address to instruct
 # but most of the instruct function in this file defines a forward method
 # for single qubit version with an int as input.
+#
+#
+# In order to make multi threading work, the state vector MUST be named as state
 
 using YaoBase, BitBasis, LuxurySparse, StaticArrays
 export instruct!
@@ -12,6 +15,23 @@ export instruct!
 A list of symbol for specialized gates/operators.
 """
 const SPECIALIZATION_LIST = Symbol[:X, :Y, :Z, :S, :T, :Sdag, :Tdag]
+
+const THREAD_THRESHOLD = 10
+
+# generates the threading expression
+macro threads(ex)
+    if Threads.nthreads() == 1 # do nothing in single threading mode
+        return esc(ex)
+    else
+        return quote
+            if log2dim1(state) < THREAD_THRESHOLD
+                $(esc(ex))
+            else
+                Threads.@threads $(esc(ex))
+            end
+        end
+    end
+end
 
 # to avoid potential ambiguity, we limit them to tuple for now
 # but they only has to be an iterator over integers
@@ -93,7 +113,7 @@ function YaoBase.instruct!(state::AbstractVecOrMat{T}, U1::AbstractMatrix{T}, lo
 end
 
 @inline function instruct_kernel(state::AbstractVecOrMat, loc, step1, step2, a, b, c, d)
-    Threads.@threads for j in 0:step2:size(state, 1)-step1
+    @threads for j in 0:step2:size(state, 1)-step1
         @inbounds for i in j+1:j+step1
             u1rows!(state, i, i+step1, a, b, c, d)
         end
@@ -110,7 +130,9 @@ function YaoBase.instruct!(state::AbstractVecOrMat{T}, U1::SDPermMatrix{T}, loc:
     b, c = U1.vals
     step = 1<<(loc-1)
     step_2 = 1<<loc
-    Threads.@threads for j in 0:step_2:size(state, 1)-step
+    if log2dim1(state) < THREAD_THRESHOLD
+    end
+    @threads for j in 0:step_2:size(state, 1)-step
         @inbounds for i in j+1:j+step
             swaprows!(state, i, i+step, c, b)
         end
@@ -126,7 +148,7 @@ function YaoBase.instruct!(state::AbstractVecOrMat{T}, U1::SDDiagonal{T}, loc::I
     a, d = U1.diag
     step = 1<<(loc - 1)
     step_2 = 1 << loc
-    Threads.@threads for j in 0:step_2:size(state, 1)-step
+    @threads for j in 0:step_2:size(state, 1)-step
         @inbounds for i in j+1:j+step
             mulrow!(state, i, a)
             mulrow!(state, i+step, d)
@@ -140,7 +162,7 @@ end
 function YaoBase.instruct!(state::AbstractVecOrMat, ::Val{:X}, locs::NTuple{N, Int}) where N
     mask = bmask(locs)
     do_mask = bmask(first(locs))
-    Threads.@threads for b in basis(state)
+    @threads for b in basis(state)
         @inbounds if anyone(b, do_mask)
             i = b+1
             i_ = flip(b, mask) + 1
@@ -155,7 +177,7 @@ function YaoBase.instruct!(state::AbstractVecOrMat{T}, ::Val{:Y}, locs::NTuple{N
     bit_parity = iseven(length(locs)) ? 1 : -1
     factor = T(-im)^length(locs)
 
-    Threads.@threads for b in basis(Int, state)
+    @threads for b in basis(Int, state)
         if anyone(b, do_mask)
             i = b + 1
             i_ = flip(b, mask) + 1
@@ -169,7 +191,7 @@ end
 
 function YaoBase.instruct!(state::AbstractVecOrMat{T}, ::Val{:Z}, locs::NTuple{N, Int}) where {T, N}
     mask = bmask(Int, locs)
-    Threads.@threads for b in basis(Int, state)
+    @threads for b in basis(Int, state)
         if isodd(count_ones(b & mask))
             mulrow!(state, b + 1, -1)
         end
@@ -180,7 +202,7 @@ end
 for (G, FACTOR) in zip([:S, :T, :Sdag, :Tdag], [:(im), :($(exp(im*π/4))), :(-im), :($(exp(-im*π/4)))])
     @eval function YaoBase.instruct!(state::AbstractVecOrMat{T}, ::Val{$(QuoteNode(G))}, locs::NTuple{N, Int}) where {T, N}
         mask = bmask(Int, locs)
-        Threads.@threads for b in basis(Int, state)
+        @threads for b in basis(Int, state)
             mulrow!(state, b+1, $FACTOR^count_ones(b & mask))
         end
         return state
@@ -196,7 +218,7 @@ for (G, FACTOR) in zip([:Z, :S, :T, :Sdag, :Tdag], [:(-1), :(im), :($(exp(im*π/
         mask = bmask(locs)
         step = 1<<(locs-1)
         step_2 = 1<<locs
-        Threads.@threads for j in 0:step_2:size(state, 1)-step
+        @threads for j in 0:step_2:size(state, 1)-step
             for i in j+step+1:j+step_2
                 mulrow!(state, i, $FACTOR)
             end
@@ -224,7 +246,7 @@ function YaoBase.instruct!(
 
     ctrl = controller((control_locs..., locs[1]), (control_bits..., 0))
     mask2 = bmask(locs)
-    Threads.@threads for b in basis(state)
+    @threads for b in basis(state)
         if ctrl(b)
             i = b + 1
             i_ = flip(b, mask2) + 1
@@ -242,8 +264,7 @@ function YaoBase.instruct!(
 
     ctrl = controller((control_locs..., locs[1]), (control_bits..., 0))
     mask2 = bmask(locs)
-    Threads.@threads for b in basis(state)
-        local i_::Int
+    @threads for b in basis(state)
         if ctrl(b)
             i = b + 1
             i_ = flip(b, mask2) + 1
@@ -261,7 +282,7 @@ for (G, FACTOR) in zip([:Z, :S, :T, :Sdag, :Tdag], [:(-1), :(im), :($(exp(im*π/
             control_bits::NTuple{N3, Int}) where {T, N1, N2, N3}
 
         ctrl = controller([control_locs..., locs[1]], [control_bits..., 1])
-        Threads.@threads for b in basis(state)
+        @threads for b in basis(state)
             if ctrl(b)
                 mulrow!(state, b+1, $FACTOR)
             end
@@ -293,7 +314,7 @@ function YaoBase.instruct!(
     step = 1 << (control_locs-1)
     step_2 = 1 << control_locs
     start = control_bits == 1 ? step : 0
-    Threads.@threads for j in start:step_2:size(state, 1)-step+start
+    @threads for j in start:step_2:size(state, 1)-step+start
         for b in j:j+step-1
             @inbounds if allone(b, mask2)
                 i = b+1
@@ -314,7 +335,7 @@ function YaoBase.instruct!(
     step = 1<<(control_locs-1)
     step_2 = 1<<control_locs
     start = control_bits==1 ? step : 0
-    Threads.@threads for j in start:step_2:size(state, 1)-step+start
+    @threads for j in start:step_2:size(state, 1)-step+start
         for b in j:j+step-1
             @inbounds if allone(b, mask2)
                 i = b+1
@@ -343,7 +364,7 @@ for (G, FACTOR) in zip([:Z, :S, :T, :Sdag, :Tdag], [:(-1), :(im), :($(exp(im*π/
         step = 1 << (control_locs - 1)
         step_2 = 1 << control_locs
         start = control_bits == 1 ? step : 0
-        Threads.@threads for j in start:step_2:size(state, 1)-step+start
+        @threads for j in start:step_2:size(state, 1)-step+start
             for i in j+1:j+step
                 if allone(i-1, mask2)
                     mulrow!(state, i, $FACTOR)
@@ -363,7 +384,7 @@ function YaoBase.instruct!(
     mask1 = bmask(locs[1])
     mask2 = bmask(locs[2])
     mask12 = mask1|mask2
-    Threads.@threads for b in basis(state)
+    @threads for b in basis(state)
         if b&mask1==0 && b&mask2==mask2
             i = b+1
             i_ = b ⊻ mask12 + 1
