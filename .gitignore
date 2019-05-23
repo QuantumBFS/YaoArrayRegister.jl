@@ -7,3 +7,5 @@
 docs/build/
 docs/site/
 docs/src/examples/*.md
+
+benchmark/Manifest.toml
