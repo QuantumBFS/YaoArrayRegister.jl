@@ -105,7 +105,7 @@ end
     for (R, G) in [(:Rx, X), (:Ry, Y), (:Rz, Z), (:PSWAP, SWAP)]
         @test rot_mat(T, Val(R), theta) ≈ rot_mat(T, G, theta)
     end
-    @test rot_mat(T, Val(:CPHASE), theta) ≈ rot_mat(T, CZ, theta)*exp(im*theta/2)
+    @test rot_mat(T, Val(:CPHASE), theta) ≈ rot_mat(T, Diagonal([1, 1, 1, -1]), theta)*exp(im*theta/2)
     for ST in [randn(ComplexF64, 1 << 5), randn(ComplexF64, 1 << 5, 10)]
         for R in [:Rx, :Ry, :Rz]
             @test instruct!(copy(ST), Val(R), (4,), θ) ≈ instruct!(copy(ST), Matrix(rot_mat(T, Val(R), θ)), (4,))

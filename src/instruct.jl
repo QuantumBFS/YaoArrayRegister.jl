@@ -248,6 +248,7 @@ end
 
 
 # Specialized
+import YaoBase: rot_mat
 """rotation gate, will be removed to YaoBase."""
 function rot_mat(::Type{T}, gen::AbstractMatrix, theta::Real) where {N, T}
     I = IMatrix{size(gen, 1), T}()
