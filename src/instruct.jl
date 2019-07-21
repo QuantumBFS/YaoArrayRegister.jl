@@ -248,6 +248,19 @@ end
 
 
 # Specialized
+"""rotation gate, will be removed to YaoBase."""
+function rot_mat(::Type{T}, gen::AbstractMatrix, theta::Real) where {N, T}
+    I = IMatrix{size(gen, 1), T}()
+    m = I * cos(theta / 2) - im * sin(theta / 2) * gen
+    if eltype(m) != T
+        m2 = similar(m, T)
+        copyto!(m2, m)
+        return m2
+    else
+        return m
+    end
+end
+
 YaoBase.rot_mat(::Type{T}, ::Val{:Rx}, theta::Real) where T =
     T[cos(theta/2) -im * sin(theta/2); -im * sin(theta/2) cos(theta/2)]
 YaoBase.rot_mat(::Type{T}, ::Val{:Ry}, theta::Real) where T =
