@@ -249,28 +249,16 @@ end
 
 # Specialized
 import YaoBase: rot_mat
-"""rotation gate, will be removed to YaoBase."""
-function rot_mat(::Type{T}, gen::AbstractMatrix, theta::Real) where {N, T}
-    I = IMatrix{size(gen, 1), T}()
-    m = I * cos(theta / 2) - im * sin(theta / 2) * gen
-    if eltype(m) != T
-        m2 = similar(m, T)
-        copyto!(m2, m)
-        return m2
-    else
-        return m
-    end
-end
 
-YaoBase.rot_mat(::Type{T}, ::Val{:Rx}, theta::Real) where T =
+rot_mat(::Type{T}, ::Val{:Rx}, theta::Real) where T =
     T[cos(theta/2) -im * sin(theta/2); -im * sin(theta/2) cos(theta/2)]
-YaoBase.rot_mat(::Type{T}, ::Val{:Ry}, theta::Real) where T =
+rot_mat(::Type{T}, ::Val{:Ry}, theta::Real) where T =
     T[cos(theta/2) -sin(theta/2); sin(theta/2) cos(theta/2)]
-YaoBase.rot_mat(::Type{T}, ::Val{:Rz}, theta::Real) where T =
+rot_mat(::Type{T}, ::Val{:Rz}, theta::Real) where T =
     Diagonal(T[exp(-im*theta/2), exp(im*theta/2)])
-YaoBase.rot_mat(::Type{T}, ::Val{:CPHASE}, theta::Real) where T =
+rot_mat(::Type{T}, ::Val{:CPHASE}, theta::Real) where T =
     Diagonal(T[1, 1, 1, exp(im*theta)])
-YaoBase.rot_mat(::Type{T}, ::Val{:PSWAP}, theta::Real) where T =
+rot_mat(::Type{T}, ::Val{:PSWAP}, theta::Real) where T =
     rot_mat(T, Const.SWAP, theta)
 
 for G in [:Rx, :Ry, :Rz, :CPHASE]
