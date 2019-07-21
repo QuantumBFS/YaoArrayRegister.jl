@@ -6,6 +6,7 @@ using YaoBase.Const
 @testset "test general unitary instruction" begin
     U1 = randn(ComplexF64, 2, 2)
     ST = randn(ComplexF64, 1<<4)
+    REG = ArrayReg(ST)
     I2 = IMatrix(2)
     M = kron(I2, U1, I2, I2) * ST
 
@@ -18,6 +19,8 @@ using YaoBase.Const
 
     @test instruct!(copy(ST), kron(U1, U1), (3, 1)) ≈
         instruct!(instruct!(copy(ST), U1, 3), U1, 1)
+    @test instruct!(copy(REG), kron(U1, U1), (3, 1)) ≈
+        instruct!(instruct!(copy(REG), U1, 3), U1, 1)
 
     @test instruct!(reshape(copy(ST), :, 1), kron(U1, U1), (3, 1)) ≈
         instruct!(instruct!(reshape(copy(ST), :, 1), U1, 3), U1, 1)

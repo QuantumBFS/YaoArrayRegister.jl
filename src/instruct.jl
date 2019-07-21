@@ -6,6 +6,10 @@
 using YaoBase, BitBasis, LuxurySparse, StaticArrays
 export instruct!
 
+function YaoBase.instruct!(reg::ArrayReg, operator, args...; kwargs...)
+    instruct!(state(reg), operator, args...; kwargs...)
+end
+
 """
     SPECIALIZATION_LIST::Vector{Symbol}
 
