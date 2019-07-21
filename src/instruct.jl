@@ -7,7 +7,7 @@ using YaoBase, BitBasis, LuxurySparse, StaticArrays
 export instruct!
 
 function YaoBase.instruct!(reg::ArrayReg, operator, args...; kwargs...)
-    instruct!(state(reg), operator, args...; kwargs...)
+    instruct!(matvec(reg.state), operator, args...; kwargs...)
 end
 
 """
