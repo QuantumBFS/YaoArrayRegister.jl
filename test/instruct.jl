@@ -1,4 +1,5 @@
 using Test, YaoBase, YaoArrayRegister, LinearAlgebra, LuxurySparse, SparseArrays
+using YaoBase.Const
 
 # NOTE: we don't have block here, feel safe to use
 using YaoBase.Const
@@ -98,6 +99,25 @@ end
     ST = randn(ComplexF64, 1 << 2)
     θ = π/3
     @test instruct!(copy(ST), Val(:PSWAP), (1, 2), θ) ≈ (cos(θ/2)*IMatrix{4}() - im*sin(θ/2)* SWAP) * ST
+
+    T = ComplexF64
+    theta = 0.5
+    for (R, G) in [(:Rx, X), (:Ry, Y), (:Rz, Z), (:PSWAP, SWAP)]
+        @test rot_mat(T, Val(R), theta) ≈ rot_mat(T, G, theta)
+    end
+    @test rot_mat(T, Val(:CPHASE), theta) ≈ rot_mat(T, CZ, theta)*exp(im*theta/2)
+    for ST in [randn(ComplexF64, 1 << 5), randn(ComplexF64, 1 << 5, 10)]
+        for R in [:Rx, :Ry, :Rz]
+            @test instruct!(copy(ST), Val(R), (4,), θ) ≈ instruct!(copy(ST), Matrix(rot_mat(T, Val(R), θ)), (4,))
+            @test instruct!(copy(ST), Val(R), (4,), (1,), (0,), θ) ≈ instruct!(copy(ST), Matrix(rot_mat(T, Val(R), θ)), (4,), (1,), (0,))
+        end
+        for R in [:CPHASE, :PSWAP]
+            @test instruct!(copy(ST), Val(R), (4,2), θ) ≈ instruct!(copy(ST), Matrix(rot_mat(T, Val(R), θ)), (4, 2))
+            instruct!(copy(ST), Val(R), (4,2), (1,), (0,), θ)
+            instruct!(copy(ST), Matrix(rot_mat(T, Val(R), θ)), (4, 2), (1,), (0,))
+            @test instruct!(copy(ST), Val(R), (4,2), (1,), (0,), θ) ≈ instruct!(copy(ST), Matrix(rot_mat(T, Val(R), θ)), (4, 2), (1,), (0,))
+        end
+    end
 end
 
 @testset "Yao.jl/#189" begin
