@@ -188,9 +188,9 @@ function YaoBase.reorder!(r::ArrayReg, orders)
     return r
 end
 
-function YaoBase.collapseto!(r::ArrayReg, bit_config::Integer=0)
+function YaoBase.collapseto!(r::ArrayReg, bit_config::BitStr=0)
     fill!(r.state, 0)
-    @inbounds r.state[Int(bit_config)+1,:] .= 1
+    r.state[bit_config,:] .= 1
     return r
 end
 
