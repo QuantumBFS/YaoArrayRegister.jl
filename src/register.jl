@@ -1,5 +1,5 @@
 using YaoBase, BitBasis
-import BitBasis: BitStr
+import BitBasis: BitStr, BitStr64
 
 export ArrayReg,
     AdjointArrayReg,

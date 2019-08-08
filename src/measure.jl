@@ -8,12 +8,12 @@ export measure,
 
 function _measure(rng::AbstractRNG, pl::AbstractVector, nshots::Int)
     N = log2i(length(pl))
-    sample(rng, basis(BitStr{N}), Weights(pl), nshots)
+    sample(rng, basis(BitStr64{N}), Weights(pl), nshots)
 end
 
 function _measure(rng::AbstractRNG, pl::AbstractMatrix, nshots::Int)
     B = size(pl, 2)
-    res = Matrix{BitStr{log2i(length(pl))}}(undef, nshots, B)
+    res = Matrix{BitStr64{log2i(length(pl))}}(undef, nshots, B)
     for ib=1:B
         @inbounds res[:,ib] = _measure(rng, view(pl,:,ib), nshots)
     end
@@ -31,7 +31,7 @@ function YaoBase.measure_remove!(rng::AbstractRNG, ::ComputationalBasis, reg::Ar
     state = reg |> rank3
     nstate = similar(reg.state, 1<<nremain(reg), B)
     pl = dropdims(sum(state .|> abs2, dims=2), dims=2)
-    res = Vector{BitStr{nactive(reg)}}(undef, B)
+    res = Vector{BitStr64{nactive(reg)}}(undef, B)
     @inbounds for ib = 1:B
         ires = _measure(rng, view(pl, :, ib), 1)[]
         # notice ires is `BitStr` type, can be use as indices directly.
