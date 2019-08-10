@@ -35,7 +35,7 @@ function YaoBase.measure_remove!(rng::AbstractRNG, ::ComputationalBasis, reg::Ar
     @inbounds for ib = 1:B
         ires = _measure(rng, view(pl, :, ib), 1)[]
         # notice ires is `BitStr` type, can be use as indices directly.
-        nstate[:,ib] = view(state, ires,:,ib)./sqrt(pl[ires, ib])
+        nstate[:,ib] = view(state, Int64(ires)+1,:,ib)./sqrt(pl[Int64(ires)+1, ib])
         res[ib] = ires
     end
     reg.state = reshape(nstate,1,:)
@@ -48,7 +48,7 @@ function YaoBase.measure!(rng::AbstractRNG, ::ComputationalBasis, reg::ArrayReg{
     res = measure_remove!(rng, reg)
     _nstate = reshape(reg.state, :, B)
     for ib in 1:B
-        @inbounds nstate[res[ib], :, ib] .= view(_nstate, :,ib)
+        @inbounds nstate[Int64(res[ib])+1, :, ib] .= view(_nstate, :,ib)
     end
     reg.state = reshape(nstate, size(state, 1), :)
     return res
@@ -65,11 +65,11 @@ function YaoBase.measure_collapseto!(rng::AbstractRNG, ::ComputationalBasis, reg
 end
 
 import YaoBase: select, select!
-select(r::ArrayReg{B}, bits::AbstractVector{T}) where {B, T<:BitStr} = ArrayReg{B}(r.state[bits, :])
+select(r::ArrayReg{B}, bits::AbstractVector{T}) where {B, T<:BitStr} = ArrayReg{B}(r.state[Int64.(bits) .+ 1, :])
 select(r::ArrayReg{B}, bit::BitStr) where B = select(r, [bit])
 
 function select!(r::ArrayReg, bits::AbstractVector{T}) where T<:BitStr
-    r.state = r.state[bits, :]
+    r.state = r.state[Int64.(bits) .+ 1, :]
     return r
 end
 
