@@ -65,12 +65,12 @@ function YaoBase.measure_collapseto!(rng::AbstractRNG, ::ComputationalBasis, reg
 end
 
 import YaoBase: select, select!
-select(r::ArrayReg{B}, bits::AbstractVector{T}) where {B, T<:BitStr} = ArrayReg{B}(r.state[Int64.(bits) .+ 1, :])
-select(r::ArrayReg{B}, bit::BitStr) where B = select(r, [bit])
+select(r::ArrayReg{B}, bits::AbstractVector{T}) where {B, T<:Integer} = ArrayReg{B}(r.state[Int64.(bits) .+ 1, :])
+select(r::ArrayReg{B}, bit::Integer) where B = select(r, [bit])
 
-function select!(r::ArrayReg, bits::AbstractVector{T}) where T<:BitStr
+function select!(r::ArrayReg, bits::AbstractVector{T}) where T<:Integer
     r.state = r.state[Int64.(bits) .+ 1, :]
     return r
 end
 
-select!(r::ArrayReg, bit::BitStr) = select!(r, [bit])
+select!(r::ArrayReg, bit::Integer) = select!(r, [bit])
