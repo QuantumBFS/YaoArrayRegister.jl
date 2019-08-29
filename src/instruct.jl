@@ -483,3 +483,30 @@ function YaoBase.instruct!(
     end
     return state
 end
+
+@static if VERSION == v"1.2"
+    function YaoBase.instruct!(
+        state::AbstractVecOrMat{T},
+        operator::AbstractMatrix{T},
+        locs::NTuple{M, Int},
+        control_locs::NTuple{C, Int} = (),
+        control_bits::NTuple{C, Int} = ()) where {T<:Number, M, C}
+
+        U = sort_unitary(operator, locs)
+        locs_raw, ic = _prepare_instruct(state, U, locs, control_locs, control_bits)
+
+        return _instruct!(state, autostatic(U), locs_raw, ic)
+    end
+
+    YaoBase.instruct!(state::AbstractVecOrMat{T}, g::AbstractMatrix{T}, locs::Tuple{Int}) where T<:Number =
+        instruct!(state, g, locs...)
+
+    function YaoBase.instruct!(
+        state::AbstractVecOrMat{T},
+        operator::AbstractMatrix{T},
+        locs::Tuple{},
+        control_locs::NTuple{C, Int}=(),
+        control_bits::NTuple{C, Int}=()) where {T<:Number, M, C}
+        return state
+    end
+end
