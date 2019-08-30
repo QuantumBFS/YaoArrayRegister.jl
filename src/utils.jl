@@ -221,3 +221,9 @@ end
     end
     state
 end
+
+#### Yao Base patch ####
+using YaoBase
+function YaoBase.batched_kron!(C::Array{T, 3}, A::AbstractArray{T1, 3}, B::AbstractArray{T2, 3}) where {T, T1, T2}
+    YaoBase.batched_kron!(C, convert(Array{T,3}, A), convert(Array{T,3}, B))
+end
