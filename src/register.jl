@@ -1,5 +1,6 @@
 using YaoBase, BitBasis
 import BitBasis: BitStr, BitStr64
+using LinearAlgebra: Transpose
 
 export ArrayReg,
     AdjointArrayReg,
@@ -142,6 +143,9 @@ function Base.copyto!(dst::AdjointArrayReg, src::AdjointArrayReg)
     copyto!(state(dst), state(src))
     return dst
 end
+
+Base.convert(::Type{Transpose{T, Matrix{T}}}, arr::AbstractMatrix{T}) where T = transpose(Matrix(transpose(arr)))
+Base.convert(t::Type{Transpose{T, Matrix{T}}}, arr::Transpose{T}) where T = invoke(convert, Tuple{Type{Transpose{T, Matrix{T}}}, Transpose}, t, arr)
 
 # register interface
 YaoBase.nqubits(r::ArrayReg{B}) where B = log2i(length(r.state) ÷ B)
@@ -333,7 +337,14 @@ product_state(total::Int, bit_config::Integer; nbatch::Int=1) = product_state(Co
 product_state(::Type{T}, bit_str::BitStr; nbatch::Int=1) where T = ArrayReg{nbatch}(T, bit_str)
 
 function product_state(::Type{T}, total::Int, bit_config::Integer; nbatch::Int=1) where T
-    return ArrayReg{nbatch}(onehot(T, total, bit_config, nbatch))
+    if nbatch == 1
+        raw = onehot(T, total, bit_config, nbatch)
+    else
+        raw = zeros(T, nbatch, 1<<total)
+        raw[:,Int(bit_config)+1] .= 1
+        raw = transpose(raw)
+    end
+    return ArrayReg{nbatch}(raw)
 end
 
 """
@@ -386,7 +397,7 @@ ArrayReg{2, Complex{Float64}, Array...}
 rand_state(n::Int; nbatch::Int=1) = rand_state(ComplexF64, n; nbatch=nbatch)
 
 function rand_state(::Type{T}, n::Int; nbatch::Int=1) where T
-    raw = randn(T, 1<<n, nbatch)
+    raw = nbatch == 1 ? randn(T, 1<<n, nbatch) : transpose(randn(T, nbatch, 1<<n))
     return normalize!(ArrayReg{nbatch}(raw))
 end
 
