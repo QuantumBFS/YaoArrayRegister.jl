@@ -10,8 +10,8 @@ using LinearAlgebra, SparseArrays
 
 bench(n, U, loc::Tuple) = @benchmarkable instruct!(st, $U, $loc) setup=(st=statevec(rand_state($n)))
 bench(n, U, loc::Tuple, control_locs::Tuple, control_bits::Tuple) = @benchmarkable instruct!(st, $U, $loc, $control_locs, $control_bits) setup=(st=statevec(rand_state($n)))
-bench(n, nbatch::Int, U, loc::Tuple) = @benchmarkable instruct!(st, $U, $loc) setup=(st=statevec(rand_state($n, nbatch=$nbatch)))
-bench(n, nbatch::Int, U, loc::Tuple, control_locs::Tuple, control_bits::Tuple) = @benchmarkable instruct!(st, $U, $loc, $control_locs, $control_bits) setup=(st=statevec(rand_state($n, nbatch=$nbatch)))
+bench(n, B::Int, U, loc::Tuple) = @benchmarkable instruct!(st, $U, $loc) setup=(st=statevec(rand_state($n, nbatch=$B)))
+bench(n, B::Int, U, loc::Tuple, control_locs::Tuple, control_bits::Tuple) = @benchmarkable instruct!(st, $U, $loc, $control_locs, $control_bits) setup=(st=statevec(rand_state($n, nbatch=$B)))
 
 
 const SUITE = BenchmarkGroup()
@@ -147,48 +147,48 @@ SUITE["batched specialized"] = BenchmarkGroup()
 # Specialized Gate Instruction
 SUITE["batched specialized"]["single qubit"] = BenchmarkGroup()
 ## single qubit benchmark
-for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, nbatch in 10:20:100
-    SUITE["batched specialized"]["single qubit"][string(U), n, nbatch] = bench(n, nbatch, Val(U), (1, ))
+for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, B in 10:20:100
+    SUITE["batched specialized"]["single qubit"][string(U), n, B] = bench(n, B, Val(U), (1, ))
 end
 
 SUITE["batched specialized"]["single control"] = BenchmarkGroup()
-for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, nbatch in 10:20:100
-    SUITE["batched specialized"]["single control"][string(U), n, nbatch, (2, ), (1, )] =
-        bench(n, nbatch, Val(U), (1, ), (2, ), (1, ))
+for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, B in 10:20:100
+    SUITE["batched specialized"]["single control"][string(U), n, B, (2, ), (1, )] =
+        bench(n, B, Val(U), (1, ), (2, ), (1, ))
 end
 
 SUITE["batched specialized"]["multi control"] = BenchmarkGroup()
 
-for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, nbatch in 10:20:100
+for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, B in 10:20:100
     control_locs = Tuple(2:n); control_bits = ntuple(x->1, n-1)
-    SUITE["batched specialized"]["multi control"][string(U), n, nbatch, 2:n, control_locs] =
-        bench(n, nbatch, Val(U), (1, ), control_locs, control_bits)
+    SUITE["batched specialized"]["multi control"][string(U), n, B, 2:n, control_locs] =
+        bench(n, B, Val(U), (1, ), control_locs, control_bits)
 end
 
 SUITE["batched specialized"]["multi qubit"] = BenchmarkGroup()
 const location_sparsity = 0.4
 @info "generating benchmark for specialized operators for multi qubits"
 ## multi qubit benchmark
-for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, nbatch in 10:20:100
+for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, B in 10:20:100
     perms = randperm(n)[1:ceil(Int, location_sparsity * n)]
-    SUITE["batched specialized"]["multi qubit"][string(U), n, nbatch] = bench(n, nbatch, Val(U), Tuple(perms))
+    SUITE["batched specialized"]["multi qubit"][string(U), n, B] = bench(n, B, Val(U), Tuple(perms))
 end
 
 SUITE["batched specialized"]["multi qubit multi control"] = BenchmarkGroup()
 SUITE["batched specialized"]["single qubit multi control"] = BenchmarkGroup()
 
 const control_rate = 0.3
-for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, nbatch in 10:20:100
+for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, B in 10:20:100
     num_controls = ceil(Int, n * control_rate)
     perms = randperm(n)
     control_locs = Tuple(perms[1:num_controls]); control_bits = ntuple(x->rand(0:1), num_controls)
     perms = perms[num_controls+1:num_controls+round(Int, location_sparsity * n)]
 
-    SUITE["batched specialized"]["multi qubit multi control"][string(U), n, nbatch, num_controls] = bench(n, nbatch, Val(U), Tuple(perms), control_locs, control_bits)
-    SUITE["batched specialized"]["single qubit multi control"][string(U), n, nbatch, num_controls] = bench(n, nbatch, Val(U), (perms[1], ), control_locs, control_bits)
+    SUITE["batched specialized"]["multi qubit multi control"][string(U), n, B, num_controls] = bench(n, B, Val(U), Tuple(perms), control_locs, control_bits)
+    SUITE["batched specialized"]["single qubit multi control"][string(U), n, B, num_controls] = bench(n, B, Val(U), (perms[1], ), control_locs, control_bits)
 end
 
-for n in 4:4:25
+for n in 5:4:15, B in 10:20:100
     SUITE["batched specialized"]["multi qubit"]["SWAP", n, nbatch] = bench(n, nbatch, Val(:SWAP), (1, 2))
     SUITE["batched specialized"]["multi qubit"]["SWAP", "random", n, nbatch] = bench(n, nbatch, Val(:SWAP), Tuple(randperm(n)[1:2]))
 end
@@ -231,28 +231,28 @@ matrices(N) = matrices(ComplexF64, N)
 
 @info "generating benchmark for batched contiguous matrices locs"
 ### contiguous
-for n in 1:2:5, T in [ComplexF64], U in matrices(T, 1<<n), nbatch in 10:20:100
+for n in 1:2:5, T in [ComplexF64], U in matrices(T, 1<<n), B in 10:20:100
     # contiguous ordered address
-    SUITE["batched matrices"]["contiguous"]["ordered"][n, nbatch, string(T), string(typeof(U))] = bench(n, nbatch, U, Tuple(1:n))
+    SUITE["batched matrices"]["contiguous"]["ordered"][n, B, string(T), string(typeof(U))] = bench(n, B, U, Tuple(1:n))
     # contiguous random address
-    SUITE["batched matrices"]["contiguous"]["random"][n, nbatch, string(T), string(typeof(U))] = bench(n, nbatch, U, Tuple(randperm(n)))
+    SUITE["batched matrices"]["contiguous"]["random"][n, B, string(T), string(typeof(U))] = bench(n, B, U, Tuple(randperm(n)))
 end
 
 @info "generating benchmark for in-contiguous matrices locs"
 ### in-contiguous
-for m in 1:3, T in [ComplexF64], U in matrices(T, 1 << m), nbatch in 10:20:100
+for m in 1:3, T in [ComplexF64], U in matrices(T, 1 << m), B in 10:20:100
     n = 10; N = 1 << n
     # in-contiguous ordered address
-    SUITE["batched matrices"]["in-contiguous"]["ordered"][m, nbatch, string(T), string(typeof(U))] = bench(n, nbatch, U, Tuple(sort(randperm(n)[1:m])))
+    SUITE["batched matrices"]["in-contiguous"]["ordered"][m, B, string(T), string(typeof(U))] = bench(n, B, U, Tuple(sort(randperm(n)[1:m])))
     # in-contiguous random address
-    SUITE["batched matrices"]["in-contiguous"]["random"][m, nbatch, string(T), string(typeof(U))] = bench(n, nbatch, U, Tuple(randperm(n)[1:m]))
+    SUITE["batched matrices"]["in-contiguous"]["random"][m, B, string(T), string(typeof(U))] = bench(n, B, U, Tuple(randperm(n)[1:m]))
 end
 
 @info "generating benchmark for single qubit matrices"
 ### single qubit
-for T in [ComplexF64], U in matrices(T, 2), n in 1:4:25, nbatch in 10:20:100
-    SUITE["batched matrices"]["single qubit"]["ordered"][string(T), nbatch, string(typeof(U)), n] = bench(n, nbatch, U, (rand(1:n), ))
-    SUITE["batched matrices"]["single qubit"]["random"][string(T), nbatch, string(typeof(U)), n] = bench(n, nbatch, U, (rand(1:n), ))
+for T in [ComplexF64], U in matrices(T, 2), n in 1:4:25, B in 10:20:100
+    SUITE["batched matrices"]["single qubit"]["ordered"][string(T), B, string(typeof(U)), n] = bench(n, B, U, (rand(1:n), ))
+    SUITE["batched matrices"]["single qubit"]["random"][string(T), B, string(typeof(U)), n] = bench(n, B, U, (rand(1:n), ))
 end
 
 SUITE["batched matrices"]["controlled"] = BenchmarkGroup()
@@ -260,9 +260,9 @@ SUITE["batched matrices"]["controlled"]["ordered"] = BenchmarkGroup()
 SUITE["batched matrices"]["controlled"]["random"] = BenchmarkGroup()
 
 test_bench(n, U, loc, control_locs, control_bits) = instruct!(statevec(rand_state(n)), U, loc, control_locs, control_bits)
-for T in [ComplexF64], n in 1:2:5, m in 3:2:6, U in matrices(T, 1<<n), nbatch in 10:20:100
-    SUITE["batched matrices"]["controlled"]["ordered"][n, nbatch, m, string(T), string(typeof(U))] = bench(n+m, nbatch, U, Tuple(1:n), Tuple(n+1:n+m), ntuple(x->1, m))
+for T in [ComplexF64], n in 1:2:5, m in 3:2:6, U in matrices(T, 1<<n), B in 10:20:100
+    SUITE["batched matrices"]["controlled"]["ordered"][n, B, m, string(T), string(typeof(U))] = bench(n+m, B, U, Tuple(1:n), Tuple(n+1:n+m), ntuple(x->1, m))
 
     perms = randperm(n+m)
-    SUITE["batched matrices"]["controlled"]["random"][n, nbatch, m, string(T), string(typeof(U))] = bench(n+m, nbatch, U, Tuple(perms[1:n]), Tuple(perms[n+1:n+m]), ntuple(x->1, m))
+    SUITE["batched matrices"]["controlled"]["random"][n, B, m, string(T), string(typeof(U))] = bench(n+m, B, U, Tuple(perms[1:n]), Tuple(perms[n+1:n+m]), ntuple(x->1, m))
 end
