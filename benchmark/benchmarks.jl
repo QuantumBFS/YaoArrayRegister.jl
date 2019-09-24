@@ -165,7 +165,7 @@ for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, nbatch in 10:20:100
         bench(n, nbatch, Val(U), (1, ), control_locs, control_bits)
 end
 
-SUITE["specialized"]["multi qubit"] = BenchmarkGroup()
+SUITE["batched specialized"]["multi qubit"] = BenchmarkGroup()
 const location_sparsity = 0.4
 @info "generating benchmark for specialized operators for multi qubits"
 ## multi qubit benchmark
