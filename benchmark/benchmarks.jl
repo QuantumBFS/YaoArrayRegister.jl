@@ -189,8 +189,8 @@ for U in YaoArrayRegister.SPECIALIZATION_LIST, n in 5:4:15, B in 10:20:100
 end
 
 for n in 5:4:15, B in 10:20:100
-    SUITE["batched specialized"]["multi qubit"]["SWAP", n, nbatch] = bench(n, nbatch, Val(:SWAP), (1, 2))
-    SUITE["batched specialized"]["multi qubit"]["SWAP", "random", n, nbatch] = bench(n, nbatch, Val(:SWAP), Tuple(randperm(n)[1:2]))
+    SUITE["batched specialized"]["multi qubit"]["SWAP", n, B] = bench(n, B, Val(:SWAP), (1, 2))
+    SUITE["batched specialized"]["multi qubit"]["SWAP", "random", n, B] = bench(n, B, Val(:SWAP), Tuple(randperm(n)[1:2]))
 end
 
 # General Instructions (matrices based)
