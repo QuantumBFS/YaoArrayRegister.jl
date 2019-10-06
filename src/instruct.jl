@@ -56,7 +56,7 @@ end
 
 function _instruct!(state::AbstractVecOrMat{T}, U::AbstractMatrix{T}, locs_raw::SVector, ic::IterControl) where T
     controldo(ic) do i
-        unrows!(state, locs_raw .+ i, U)
+        @inbounds unrows!(state, locs_raw .+ i, U)
     end
     return state
 end
@@ -64,7 +64,7 @@ end
 function _instruct!(state::AbstractVecOrMat{T}, U::SDSparseMatrixCSC{T}, locs_raw::SVector, ic::IterControl) where T
     work = ndims(state)==1 ? similar(state, length(locs_raw)) : similar(state, length(locs_raw), size(state,2))
     controldo(ic) do i
-        unrows!(state, locs_raw .+ i, U, work)
+        @inbounds unrows!(state, locs_raw .+ i, U, work)
     end
     return state
 end
@@ -131,8 +131,8 @@ end
 function YaoBase.instruct!(state::AbstractVecOrMat, ::Val{:X}, locs::NTuple{N, Int}) where N
     mask = bmask(locs)
     do_mask = bmask(first(locs))
-    for b in basis(state)
-        @inbounds if anyone(b, do_mask)
+    @inbounds for b in basis(state)
+        if anyone(b, do_mask)
             i = b+1
             i_ = flip(b, mask) + 1
             swaprows!(state, i, i_)
@@ -146,7 +146,7 @@ function YaoBase.instruct!(state::AbstractVecOrMat{T}, ::Val{:Y}, locs::NTuple{N
     bit_parity = iseven(length(locs)) ? 1 : -1
     factor = T(-im)^length(locs)
 
-    for b in basis(Int, state)
+    @inbounds for b in basis(Int, state)
         if anyone(b, do_mask)
             i = b + 1
             i_ = flip(b, mask) + 1
@@ -162,7 +162,7 @@ function YaoBase.instruct!(state::AbstractVecOrMat{T}, ::Val{:Z}, locs::NTuple{N
     mask = bmask(Int, locs)
     for b in basis(Int, state)
         if isodd(count_ones(b & mask))
-            mulrow!(state, b + 1, -1)
+            @inbounds mulrow!(state, b + 1, -1)
         end
     end
     return state
@@ -172,7 +172,7 @@ for (G, FACTOR) in zip([:S, :T, :Sdag, :Tdag], [:(im), :($(exp(im*π/4))), :(-im
     @eval function YaoBase.instruct!(state::AbstractVecOrMat{T}, ::Val{$(QuoteNode(G))}, locs::NTuple{N, Int}) where {T, N}
         mask = bmask(Int, locs)
         for b in basis(Int, state)
-            mulrow!(state, b+1, $FACTOR^count_ones(b & mask))
+            @inbounds mulrow!(state, b+1, $FACTOR^count_ones(b & mask))
         end
         return state
     end
@@ -192,7 +192,7 @@ for (G, FACTOR) in zip([:Z, :S, :T, :Sdag, :Tdag], [:(-1), :(im), :($(exp(im*π/
         step_2 = 1<<locs
         for j in 0:step_2:size(state, 1)-step
             for i in j+step+1:j+step_2
-                mulrow!(state, i, $FACTOR)
+                @inbounds mulrow!(state, i, $FACTOR)
             end
         end
         state
@@ -254,7 +254,7 @@ function YaoBase.instruct!(
         if ctrl(b)
             i = b + 1
             i_ = flip(b, mask2) + 1
-            swaprows!(state, i, i_)
+            @inbounds swaprows!(state, i, i_)
         end
     end
     return state
@@ -273,7 +273,7 @@ function YaoBase.instruct!(
         if ctrl(b)
             i = b + 1
             i_ = flip(b, mask2) + 1
-            swaprows!(state, i, i_, im, -im)
+            @inbounds swaprows!(state, i, i_, im, -im)
         end
     end
     return state
@@ -289,7 +289,7 @@ for (G, FACTOR) in zip([:Z, :S, :T, :Sdag, :Tdag], [:(-1), :(im), :($(exp(im*π/
         ctrl = controller([control_locs..., locs[1]], [control_bits..., 1])
         for b in basis(state)
             if ctrl(b)
-                mulrow!(state, b+1, $FACTOR)
+                @inbounds mulrow!(state, b+1, $FACTOR)
             end
         end
         return state
@@ -372,7 +372,7 @@ for (G, FACTOR) in zip([:Z, :S, :T, :Sdag, :Tdag], [:(-1), :(im), :($(exp(im*π/
         for j in start:step_2:size(state, 1)-step+start
             for i in j+1:j+step
                 if allone(i-1, mask2)
-                    mulrow!(state, i, $FACTOR)
+                    @inbounds mulrow!(state, i, $FACTOR)
                 end
             end
         end
@@ -393,7 +393,7 @@ function YaoBase.instruct!(
         if b&mask1==0 && b&mask2==mask2
             i = b+1
             i_ = b ⊻ mask12 + 1
-            swaprows!(state, i, i_)
+            @inbounds swaprows!(state, i, i_)
         end
     end
     return state
@@ -410,7 +410,7 @@ function YaoBase.instruct!(
     a = T(cos(theta/2))
     c = T(-im * sin(theta/2))
     e = T(exp(-im/2*theta))
-    for b in basis(state)
+    @inbounds for b in basis(state)
         if b&mask1==0
             i = b+1
             i_ = b ⊻ mask12 + 1
@@ -438,7 +438,7 @@ function YaoBase.instruct!(
     a = T(cos(theta/2))
     c = T(-im * sin(theta/2))
     e = T(exp(-im/2*theta))
-    for b in itercontrol(log2i(size(state, 1)), [control_locs...], [control_bits...])
+    @inbounds for b in itercontrol(log2i(size(state, 1)), [control_locs...], [control_bits...])
         if b&mask1==0
             i = b+1
             i_ = b ⊻ mask12 + 1
