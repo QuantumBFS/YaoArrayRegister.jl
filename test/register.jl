@@ -15,6 +15,11 @@ using Test, YaoArrayRegister, BitBasis, LinearAlgebra
 
     st = rand(ComplexF64, 4, 6)
     @test state(adjoint(ArrayReg(st))) == adjoint(st)
+
+    reg = ArrayReg{6}(st)
+    regt = transpose_storage(reg)
+    @test regt.state isa Transpose
+    @test regt == reg
 end
 
 @testset "test $T initialization methods" for T in [ComplexF64, ComplexF32, ComplexF16]
