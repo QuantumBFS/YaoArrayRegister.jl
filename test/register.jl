@@ -20,11 +20,18 @@ using Test, YaoArrayRegister, BitBasis, LinearAlgebra
     regt = transpose_storage(reg)
     @test regt.state isa Transpose
     @test regt == reg
+    @test transpose_storage(regt).state isa Matrix
+    @test transpose_storage(regt) == reg
 end
 
 @testset "test $T initialization methods" for T in [ComplexF64, ComplexF32, ComplexF16]
     @testset "test product state" begin
+        st = state(product_state(T, bit"100"; nbatch=1))
+        @test !(st isa Transpose)
+        st = state(product_state(T, bit"100"; nbatch=2, no_transpose_storage=true))
+        @test !(st isa Transpose)
         st = state(product_state(T, bit"100"; nbatch=2))
+        @test st isa Transpose
         for k in 1:2
             @test st[:, k] ≈ onehot(T, bit"100")
         end
@@ -36,22 +43,37 @@ end
         @test eltype(product_state(Float64, 4, 0).state) == Float64
     end
     @testset "test zero state" begin
+        st = state(zero_state(T, 3; nbatch=1))
+        @test !(st isa Transpose)
+        st = state(zero_state(T, 3; nbatch=2, no_transpose_storage=true))
+        @test !(st isa Transpose)
         st = state(zero_state(T, 4; nbatch=4))
+        @test st isa Transpose
         for k in 1:4
             @test st[:, k] ≈ onehot(T, 4, 0)
         end
         @test eltype(zero_state(Float64, 4).state) == Float64
     end
     @testset "test rand state" begin
+        st = state(rand_state(T, 3; nbatch=1))
+        @test !(st isa Transpose)
+        st = state(rand_state(T, 3; nbatch=2, no_transpose_storage=true))
+        @test !(st isa Transpose)
         # NOTE: we only check if the state is normalized
         st = state(rand_state(T, 4, nbatch=2))
+        @test st isa Transpose
         for k in 1:2
             @test norm(st[:, k]) ≈ 1.0
         end
         @test eltype(rand_state(Float64, 4).state) == Float64
     end
     @testset "test uniform state" begin
+        st = state(uniform_state(T, 3; nbatch=1))
+        @test !(st isa Transpose)
+        st = state(uniform_state(T, 3; nbatch=2, no_transpose_storage=true))
+        @test !(st isa Transpose)
         st = state(uniform_state(T, 4; nbatch=2))
+        @test st isa Transpose
         for k in 1:2
             for each in st[:, k]
                 @test each ≈ 1/sqrt(16)
