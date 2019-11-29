@@ -7,6 +7,7 @@ able to simulate a quantum circuit alone with this package in principle.
 module YaoArrayRegister
 
 include("utils.jl")
+include("twolevel_unitary.jl")
 include("register.jl")
 include("operations.jl")
 include("focus.jl")

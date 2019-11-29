@@ -5,6 +5,10 @@ using Test
     include("utils.jl")
 end
 
+@testset "test twolevel_unitary" begin
+    include("twolevel_unitary.jl")
+end
+
 @testset "test ArrayReg" begin
     include("register.jl")
     include("operations.jl")
