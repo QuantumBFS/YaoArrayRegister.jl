@@ -1,5 +1,5 @@
 using StatsBase, StaticArrays, BitBasis, Random
-export measure, measure!, measure_remove!, measure_resetto!, select, select!
+export measure, measure!, select, select!
 
 function _measure(rng::AbstractRNG, pl::AbstractVector, nshots::Int)
     N = log2i(length(pl))
@@ -64,7 +64,7 @@ function YaoBase.measure!(
 ) where {B}
     state = reg |> rank3
     nstate = zero(state)
-    res = measure_remove!(reg; rng=rng)
+    res = measure!(RemoveMeasured(), reg; rng=rng)
     _nstate = reshape(reg.state, :, B)
     for ib in 1:B
         @inbounds nstate[Int64(res[ib])+1, :, ib] .= view(_nstate, :, ib)
