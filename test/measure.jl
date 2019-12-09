@@ -53,3 +53,10 @@ end
     res = measure(rand_state(1;nbatch=10))
     @test res isa Matrix{BitStr64{1}}
 end
+
+@testset "fix measure kwargs error" begin
+    r = rand_state(10)
+    @test length(measure(r; nshots = 10)) == 10
+    @test_throws MethodError measure!(r; nshots = 10)
+    @test_throws MethodError measure!(YaoBase.RemoveMeasured(), r; nshots = 10)
+end
