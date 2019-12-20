@@ -197,10 +197,8 @@ function YaoBase.instruct!(state::AbstractVecOrMat{T}, ::Val{:Z}, locs::NTuple{N
     return state
 end
 
-for (
-    G,
-    FACTOR,
-) in zip([:S, :T, :Sdag, :Tdag], [:(im), :($(exp(im * π / 4))), :(-im), :($(exp(-im * π / 4)))])
+for (G, FACTOR) in
+    zip([:S, :T, :Sdag, :Tdag], [:(im), :($(exp(im * π / 4))), :(-im), :($(exp(-im * π / 4)))])
     @eval function YaoBase.instruct!(
         state::AbstractVecOrMat{T},
         ::Val{$(QuoteNode(G))},
@@ -214,10 +212,7 @@ for (
     end
 end
 
-for (
-    G,
-    FACTOR,
-) in zip(
+for (G, FACTOR) in zip(
     [:Z, :S, :T, :Sdag, :Tdag],
     [:(-1), :(im), :($(exp(im * π / 4))), :(-im), :($(exp(-im * π / 4)))],
 )
@@ -337,10 +332,7 @@ function YaoBase.instruct!(
     return state
 end
 
-for (
-    G,
-    FACTOR,
-) in zip(
+for (G, FACTOR) in zip(
     [:Z, :S, :T, :Sdag, :Tdag],
     [:(-1), :(im), :($(exp(im * π / 4))), :(-im), :($(exp(-im * π / 4)))],
 )
@@ -440,10 +432,7 @@ function YaoBase.instruct!(
 end
 
 
-for (
-    G,
-    FACTOR,
-) in zip(
+for (G, FACTOR) in zip(
     [:Z, :S, :T, :Sdag, :Tdag],
     [:(-1), :(im), :($(exp(im * π / 4))), :(-im), :($(exp(-im * π / 4)))],
 )
