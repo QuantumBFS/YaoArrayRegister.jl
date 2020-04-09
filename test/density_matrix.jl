@@ -16,6 +16,13 @@ using Test, YaoArrayRegister
     @test isapprox(fidelity(reg, reg_), fidelity(reg4, reg5), atol = 1e-5)
     @test isapprox.(fidelity(reg, reg_), fidelity(repeat(reg4, 3), repeat(reg5, 3)), atol = 1e-5) |>
           all
+
+    # batch
+    st = rand(ComplexF64, 8, 2)
+    reg1 = ArrayReg(st)
+    reg2 = rand_state(3)
+
+    @test fidelity(reg1, reg2) ≈ [fidelity(ArrayReg(st[:, 1]), reg2), fidelity(ArrayReg(st[:, 2]), reg2)]
 end
 
 @testset "test trace distance" begin
