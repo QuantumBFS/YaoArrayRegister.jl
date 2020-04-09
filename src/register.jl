@@ -250,7 +250,7 @@ function YaoBase.fidelity(r1::ArrayReg{1}, r2::ArrayReg{1})
     if size(state1, 2) == 1
         return pure_state_fidelity(state1[:, 1], state2[:, 1])
     else
-        return purification_fidelity(state1[:, :], state2[:, :])
+        return purification_fidelity(state1, state2)
     end
 end
 
