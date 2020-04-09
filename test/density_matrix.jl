@@ -14,6 +14,7 @@ using Test, YaoArrayRegister
     focus!(reg4, 1:3)
     focus!(reg5, 1:3)
     @test isapprox(fidelity(reg, reg_), fidelity(reg4, reg5), atol = 1e-5)
+
     @test isapprox.(fidelity(reg, reg_), fidelity(repeat(reg4, 3), repeat(reg5, 3)), atol = 1e-5) |>
           all
 
@@ -23,6 +24,12 @@ using Test, YaoArrayRegister
     reg2 = rand_state(3)
 
     @test fidelity(reg1, reg2) ≈ [fidelity(ArrayReg(st[:, 1]), reg2), fidelity(ArrayReg(st[:, 2]), reg2)]
+
+    @test isapprox.(
+        fidelity(reg, reg_),
+        fidelity(repeat(reg4, 3), repeat(reg5, 3)),
+        atol = 1e-5,
+    ) |> all
 end
 
 @testset "test trace distance" begin
