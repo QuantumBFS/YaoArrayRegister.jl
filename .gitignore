@@ -1,5 +1,6 @@
+.vscode/*
 .DS_Store
-/Manifest.toml
+
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
@@ -9,3 +10,6 @@ docs/site/
 docs/src/examples/*.md
 benchmark/Manifest.toml
 *.swp
+docs/Manifest.toml
+
+Manifest.toml
