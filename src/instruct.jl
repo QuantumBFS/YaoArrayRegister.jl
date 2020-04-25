@@ -236,13 +236,14 @@ function YaoBase.instruct!(
     locs::NTuple{N,Int},
 ) where {N}
     mask = bmask(locs)
-    do_mask = bmask(first(locs))
-    @threads for b in basis(state)
-        @inbounds if anyone(b, do_mask)
-            i = b + 1
-            i_ = flip(b, mask) + 1
-            swaprows!(state, i, i_)
-        end
+    fixed_loc = locs[end]
+    lhs_mask = ~(1 << (fixed_loc - 1) - 1)
+    @threads for lhs in 0:(length(state) >> 1) - 1
+        p = lhs + lhs & lhs_mask
+        i = flip(p, mask) + 1
+        j = p + 1
+
+        swaprows!(state, i, j)
     end
     return state
 end
