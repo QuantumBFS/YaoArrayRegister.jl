@@ -138,7 +138,7 @@ function YaoBase.instruct!(
     loc::Int,
 ) where {T}
     a, c, b, d = U1
-    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, T1(a), T1(b), T1(c), T1(d))
+    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, T(a), T(b), T(c), T(d))
     return state
 end
 
