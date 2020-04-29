@@ -52,7 +52,7 @@ end
     dg = ComplexF64[1 0; 0 -1] |> staticize
     inds = SVector{2}([1, 3])
     unrows!(v, inds, dg)
-    @test 0 == @allocated unrows!(v, inds, dg)
+    @test 0 == @allocated @inbounds unrows!(v, inds, dg)
     @test unrows!(copy(v), inds, dg) ≈ unrows!(copy(v), [1, 3], dg)
     @test unrows!(copy(v), inds, IMatrix{1 << 2}()) == v
 end
