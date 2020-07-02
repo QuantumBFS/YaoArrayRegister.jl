@@ -27,17 +27,13 @@ const THREAD_THRESHOLD = 10
 
 # generates the threading expression
 macro threads(ex)
-    if Threads.nthreads() == 1 # do nothing in single threading mode
-        return esc(:(@inbounds $ex))
-    else
-        return esc(quote
-            if log2dim1(state) < THREAD_THRESHOLD
-                @inbounds $ex
-            else
-                @inbounds Threads.@threads $ex
-            end
-        end)
-    end
+    esc(quote
+        if (Threads.nthreads() == 1) || log2dim1(state) < $THREAD_THRESHOLD
+            @inbounds $ex
+        else
+            @inbounds Threads.@threads $ex
+        end
+    end)
 end
 
 # to avoid potential ambiguity, we limit them to tuple for now
