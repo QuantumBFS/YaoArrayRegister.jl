@@ -205,8 +205,7 @@ function YaoBase.instruct!(
     b, c = U1.vals
     step = 1 << (loc - 1)
     step_2 = 1 << loc
-    if log2dim1(state) < THREAD_THRESHOLD
-    end
+
     @threads for j = 0:step_2:size(state, 1)-step
         @inbounds for i = j+1:j+step
             swaprows!(state, i, i + step, c, b)
