@@ -345,8 +345,8 @@ end # for
         (loc, )::Tuple{Int},
         theta::Number
     ) where {T, N}
-    a, b = cos(theta / 2), -im*sin(theta / 2)
-    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, b, b, a)
+    b, a = sincos(theta / 2)
+    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, -im*b, -im*b, a)
     return state
 end
 
@@ -356,7 +356,7 @@ function YaoBase.instruct!(
         (loc, )::Tuple{Int},
         theta::Number
     ) where {T, N}
-    a, b = cos(theta / 2), sin(theta / 2)
+    b, a = sincos(theta / 2)
     instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, -b, b, a)
     return state
 end
@@ -367,8 +367,8 @@ function YaoBase.instruct!(
         (loc, )::Tuple{Int},
         theta::Number
     ) where {T, N}
-    a, d = exp(-im * theta / 2), exp(im * theta / 2)
-    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, zero(T), zero(T), d)
+    a = exp(-im * theta / 2)
+    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, zero(T), zero(T), a')
     return state
 end
 
