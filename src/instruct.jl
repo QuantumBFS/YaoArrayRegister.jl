@@ -345,8 +345,8 @@ end # for
         (loc, )::Tuple{Int},
         theta::Number
     ) where {T, N}
-    a, b = cos(theta / 2), -im*sin(theta / 2)
-    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, b, b, a)
+    b, a = sincos(theta / 2)
+    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, -im*b, -im*b, a)
     return state
 end
 
