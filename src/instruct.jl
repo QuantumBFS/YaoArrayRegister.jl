@@ -161,7 +161,7 @@ function YaoBase.instruct!(
     U1::SDPermMatrix{T},
     (loc, )::Tuple{Int},
 ) where {T}
-    U1.perm[1] == 1 && return instruct!(state, Diagonal(U1), loc)
+    U1.perm[1] == 1 && return instruct!(state, Diagonal(U1), (loc, ))
     mask = bmask(loc)
     b, c = U1.vals
     step = 1 << (loc - 1)
