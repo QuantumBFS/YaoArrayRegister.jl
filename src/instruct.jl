@@ -367,8 +367,8 @@ function YaoBase.instruct!(
         (loc, )::Tuple{Int},
         theta::Number
     ) where {T, N}
-    a, d = exp(-im * theta / 2), exp(im * theta / 2)
-    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, zero(T), zero(T), d)
+    a = exp(-im * theta / 2)
+    instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, zero(T), zero(T), a')
     return state
 end
 
