@@ -356,7 +356,7 @@ function YaoBase.instruct!(
         (loc, )::Tuple{Int},
         theta::Number
     ) where {T, N}
-    a, b = cos(theta / 2), sin(theta / 2)
+    b, a = sincos(theta / 2)
     instruct_kernel(state, loc, 1 << (loc - 1), 1 << loc, a, -b, b, a)
     return state
 end
