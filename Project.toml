@@ -1,6 +1,6 @@
 name = "YaoArrayRegister"
 uuid = "e600142f-9330-5003-8abb-0ebd767abc51"
-version = "0.7.2"
+version = "0.7.3"
 
 [deps]
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"

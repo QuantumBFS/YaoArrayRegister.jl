@@ -51,7 +51,7 @@ Returns the numerical data type used by register.
 datatype(r::ArrayReg{B,T}) where {B,T} = T
 
 function _warn_type(raw::AbstractArray{T}) where {T}
-    T <: Complex || @warn "Input type of `ArrayReg` is not Complex, got $(eltype(raw))"
+    T <: AbstractFloat && @warn "Input type of `ArrayReg` is not Complex, got $(eltype(raw))"
 end
 
 ArrayReg(raw::AbstractVector) = (_warn_type(raw); ArrayReg(reshape(raw, :, 1)))
