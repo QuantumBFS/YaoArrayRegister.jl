@@ -1,5 +1,7 @@
 using YaoArrayRegister
 using Test
+using Aqua
+Aqua.test_all(YaoArrayRegister)
 
 @testset "test utils" begin
     include("utils.jl")
