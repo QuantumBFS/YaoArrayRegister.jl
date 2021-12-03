@@ -80,3 +80,13 @@ end
     reg_p = purify(reg |> ρ; nbit_env = 2)
     @test reg_p |> nqubits == 8
 end
+
+@testset "reduce density matrix" begin
+    reg = (product_state(bit"00000") + product_state(bit"11111")) / sqrt(2)
+    rdm = density_matrix(reg, (1,))
+    @test Matrix(rdm) ≈ [1/2 0; 0 1/2]
+    reg = product_state([1,0,0])
+    rdm = density_matrix(reg, (1,2))
+    @test Matrix(rdm) ≈ [0 0 0 0; 0 1 0 0; 0 0 0 0; 0 0 0 0]
+    @test measure(rdm; nshots=3) == fill(bit"01", 3)
+end
